@@ -1,5 +1,5 @@
 <h2 align="center"> 3D UH Blackhawk V[1.0.0] </h1>
-Hello! This project has been created for fun.
+Hello! These two project has been created for fun.
 <p> Try rotating the scene using your single finger, or on computer, use your left mouse. </p>
 <p> If you want to zoom in or out, use your mouse wheel or your two fingers. </p>
 
