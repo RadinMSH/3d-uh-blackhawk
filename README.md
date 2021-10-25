@@ -64,3 +64,8 @@ Graphic controls
 Movement controls
 <br>
 Higher shadow quality
+<pre>
+
+
+</pre>
+&copy;2021 All right reserved! No right to copy without permissions!
