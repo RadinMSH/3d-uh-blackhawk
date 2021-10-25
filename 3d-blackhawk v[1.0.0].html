@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>
+        <title> 3D Blackhawk </title>
+        <meta name="viewport" content="width=device-width" />
+        <meta charset="UTF-16" />
+        <style>
+            
+            
+            html {background: black;}
+            
+            * {user-select: none;}
+            
+            body {
+                width: 100vw;
+                margin: 0;
+                background: white url("https://www.dl.dropboxusercontent.com/s/yxqq7r464siucwx/Blackhawk.jpg") no-repeat center center;
+                background-size: cover;
+            }
+            
+            canvas {
+                width: 100vw;
+                opacity: 0;
+                transition: all 2s;
+            }
+            
+            div {
+                position: absolute;
+                -webkit-position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                z-index: 1;
+            }
+            
+            disabledJS {color: #fff;}
+            
+            
+        </style>
+    </head>
+    <body>
+        <canvas></canvas>
+        <disabledJS>
+            <h1 style="text-align:center; width:100vw"> Browser Support Error </h1>
+            <ul>
+                <li> You are using Internet Explorer </li>
+                <li> You are using Safari version 3.2 to 10.3 </li>
+                <li> Your browser doesn't support JavaScript </li>
+                <li> Your browser JavaScript option is disabled </li>
+                <li> Your device doesn't support WebGL </li>
+            </ul>
+        </disabledJS>
+        <div>
+            <p style="text-align:center; font-weight:1000; color:red; font-family:sans-serif"> Tap to Load </p>
+            <progress style="transition:2s" min="0" value="0" max="100"></progress>
+        </div>
+        <audio src="https://www.dl.dropboxusercontent.com/s/nerd1yciuc3evar/Blackhawk.mp3" />
+        <script type="module">
+            
+            
+            import * as $3D from "https://threejsfundamentals.org/threejs/resources/threejs/r127/build/three.module.js";
+            import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/examples/jsm/controls/OrbitControls.js';
+            import {GLTFLoader} from 'https://threejsfundamentals.org/threejs/resources/threejs/r132/examples/jsm/loaders/GLTFLoader.js';
+            let w = window.innerWidth;
+            let h = window.innerHeight;
+            let canvas = document.querySelector('canvas');
+            let progressBar = document.querySelector("progress");
+            let loadingStatus = progressBar.value;
+            let tapPart = document.querySelector("p");
+            let sound = document.querySelector("audio");
+            let noJS = document.querySelector("disabledJS");
+            let ratio = devicePixelRatio;
+            let lampColNum = 0;
+            
+            const scene = new $3D.Scene();
+            const cam = new $3D.PerspectiveCamera(45, w/h, .1, 1000);
+            const texLoader = new $3D.TextureLoader();
+            const gltfLoader = new GLTFLoader();
+            const controls = new OrbitControls(cam, canvas);
+            const light = new $3D.SpotLight();
+            const renderer = new $3D.WebGLRenderer({canvas, antialias:true});
+            const mat = new $3D.MeshBasicMaterial({color:0xff0000});
+            const width = canvas.clientWidth * Math.ceil(ratio) * 2 | 0;
+            const height = canvas.clientHeight * Math.ceil(ratio) * 2 | 0;
+            
+            const netChecker = () => {
+                if(!navigator.onLine) {
+                    alert('Your internet connection has interupted');
+                    document.body.remove();
+                    clearInterval(netStatusUpdate);
+                }
+            };
+            
+            const netStatusUpdate = setInterval(netChecker, 100);
+            setTimeout(() => {
+                document.body.style.height = document.documentElement.clientHeight + 'px';
+                canvas.style.height = document.documentElement.clientHeight + 'px';
+            }, 100);
+            noJS.remove();
+            gltfLoader.load("https://www.dl.dropboxusercontent.com/s/tc3a0eih33pzjuy/Blackhawk.glb", g => {
+                const piviot1 = new $3D.Group();
+                const piviot2 = new $3D.Group();
+                const box1 = new $3D.Box3();
+                const box2 = new $3D.Box3();
+                const box3 = new $3D.Box3();
+                const box4 = new $3D.Box3();
+                
+                let blackhawk = g.scene;
+                let rotorHead = blackhawk.getObjectByName('rotorhead');
+                let rotor1 = blackhawk.getObjectByName('rotor1');
+                let rotor2 = blackhawk.getObjectByName('rotor2');
+                let rotor3 = blackhawk.getObjectByName('rotor3');
+                let rotor4 = blackhawk.getObjectByName("rotor4");
+                let tailRotorHead = blackhawk.getObjectByName('tailrotorhead');
+                let tailRotor1 = blackhawk.getObjectByName("tailrotor1");
+                let tailRotor2 = blackhawk.getObjectByName("tailrotor2");
+                let tailRotor3 = blackhawk.getObjectByName("tailrotor3");
+                let tailRotor4 = blackhawk.getObjectByName("tailrotor4");
+                let lamp1 = blackhawk.getObjectByName("lamp1");
+                let lamp2 = blackhawk.getObjectByName("lamp2");
+                
+                box1.setFromObject(rotorHead);
+                box3.setFromObject(tailRotorHead);
+                box2.setFromObject(rotor1);
+                box2.setFromObject(rotor2);
+                box2.setFromObject(rotor3);
+                box2.setFromObject(rotor4);
+                box4.setFromObject(tailRotor1);
+                box4.setFromObject(tailRotor2);
+                box4.setFromObject(tailRotor3);
+                box4.setFromObject(tailRotor4);
+                
+                box1.getCenter(rotorHead.position);
+                box2.getCenter(rotor1.position);
+                box2.getCenter(rotor2.position);
+                box2.getCenter(rotor3.position);
+                box2.getCenter(rotor4.position);
+                box3.getCenter(tailRotorHead.position);
+                box4.getCenter(tailRotor1.position);
+                box4.getCenter(tailRotor2.position);
+                box4.getCenter(tailRotor3.position);
+                box4.getCenter(tailRotor4.position);
+                rotorHead.position.multiplyScalar(-1);
+                tailRotorHead.position.multiplyScalar(-1);
+                rotor1.position.multiplyScalar(0);
+                rotor2.position.multiplyScalar(0);
+                rotor3.position.multiplyScalar(0);
+                rotor4.position.multiplyScalar(0);
+                tailRotor1.position.multiplyScalar(0);
+                tailRotor2.position.multiplyScalar(0);
+                tailRotor3.position.multiplyScalar(0);
+                tailRotor4.position.multiplyScalar(0);
+                blackhawk.scale.set(.05, .05, .05);
+                piviot1.position.set(.5, 33, 29);
+                piviot2.position.set(-4, 34.3, -68);
+                
+                blackhawk.traverse(node => {
+                    if(node.castShadow !== undefined) {
+                        node.castShadow = node.receiveShadow = true;
+                    }
+                });
+                
+                const updateLamp = () => {
+                    setTimeout(() => lampColNum++, 500);
+                    setTimeout(() => lampColNum++, 1500);
+                    }
+                    updateLamp();
+                    
+                    setInterval(updateLamp, 1500);
+                setInterval(() => lampColNum % 2 == 0 ? mat.color.set(0xff0000) : mat.color.set(0x440000), 100);
+                lamp2.material = lamp1.material = mat;
+                
+                blackhawk.add(piviot1);
+                blackhawk.add(piviot2);
+                piviot1.add(rotorHead);
+                piviot2.add(tailRotorHead);
+                rotorHead.add(rotor1);
+                rotorHead.add(rotor2);
+                rotorHead.add(rotor3);
+                rotorHead.add(rotor4);
+                tailRotorHead.add(tailRotor1);
+                tailRotorHead.add(tailRotor2);
+                tailRotorHead.add(tailRotor3);
+                tailRotorHead.add(tailRotor4);
+                scene.add(blackhawk);
+                
+                const render = () => {
+                    piviot1.rotation.y += .2;
+                    piviot2.rotation.x += 1.2;
+                    requestAnimationFrame(render);
+                }
+                render();
+                
+                tapPart.onclick = () => {
+                    tapPart.remove();
+                    setInterval(() => {
+                        if(loadingStatus >= 100) {
+                            progressBar.style.zIndex = -1;
+                            canvas.style.opacity = 1;
+                            sound.play();
+                            
+                            if(sound.currentTime >= 10) {
+                                sound.currentTime = 0;
+                            }
+                            clearInterval(netStatusUpdate);
+                            progressBar.style.opacity = 0;
+                        }
+                        else {
+                            loadingStatus++;
+                            progressBar.value = loadingStatus;
+                        }
+                    }, 1);
+                };
+            });
+            texLoader.load('https://www.dl.dropboxusercontent.com/s/fd1nlunwx0nnya8/mountains-above-the-clouds-aerial-survey-hdri-panorama-01.jpg', t => {
+                t.mapping = $3D.EquirectangularReflectionMapping;
+                t.anisotropy = 20;
+                scene.background = t;
+            });
+            
+            renderer.shadowMap.enabled = true;
+            cam.position.z = 10;
+            controls.enablePan = false;
+            controls.minDistance = 2;
+            controls.maxDistance = 20;
+            controls.rotateSpeed = 2;
+            controls.zoomSpeed = 2;
+            controls.enableDamping = true;
+            light.position.y = 10;
+            light.castShadow = true;
+            light.power = 3;
+            light.shadow.mapSize.width = 1500;
+            light.shadow.mapSize.height = 1500;
+            
+            scene.add(light);
+                   
+            const render = () => {
+                renderer.setSize(width, height, false);
+                cam.aspect = canvas.clientWidth / canvas.clientHeight;
+                cam.updateProjectionMatrix();
+                renderer.render(scene, cam);
+                requestAnimationFrame(render);
+            }
+            requestAnimationFrame(render);
+            
+            
+        </script>
+    </body>
+</html>
