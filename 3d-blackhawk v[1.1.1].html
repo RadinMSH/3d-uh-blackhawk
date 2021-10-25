@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>
+        <title> 3D Blackhawk </title>
+        <meta name="viewport" content="width=device-width, user-scalable=no" />
+        
+        <meta charset="UTF-16" />
+        <style>
+            
+            
+            html {background: black;}
+            
+            * {
+                user-select: none;
+                font-family: sans-serif;
+            }
+            
+            body {
+                margin: 0;
+                background: white url("https://www.dl.dropboxusercontent.com/s/yxqq7r464siucwx/Blackhawk.jpg") no-repeat center center;
+                background-size: cover;
+            }
+            
+            canvas {
+                opacity: 0;
+                transition: all 2s;
+                display: none;
+            }
+            
+            .middle {
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+            
+            disabledJS {color: #fff;}
+            
+            button {
+                border-radius: 50%;
+                width: 75px;
+                height: 75px;
+                display: block;
+                background: rgba(200, 200, 200, .75);
+                border: none;
+            }
+            
+            .controls {
+                position: relative;
+                display: none;
+                bottom: 10px;
+                right: 10px;
+            }
+            
+            button:active {background: rgb(255, 255, 255);}
+            
+            #w {
+                bottom: 105px;
+                right: 190px;
+            }
+            
+            #e {
+                bottom: 105px;
+                right: 20px;
+            }
+            
+            #u {
+                bottom: 190px;
+                right: 105px;
+            }
+            
+            #d {
+                bottom: 20px;
+                right: 105px;
+            }
+            
+            #r {
+                bottom: 105px;
+                right: 105px;
+            }
+            
+            #n {
+                bottom: 20px;
+                right: 20px;
+            }
+            
+            #s {
+                bottom: 20px;
+                right: 190px;
+            }
+            
+            p {
+                font-weight: 1000;
+                animation: tap .75s linear alternate infinite;
+                color: red;
+            }
+            
+            .middle, button {
+                position: absolute;
+                -webkit-position: absolute;
+            }
+            
+            @keyframes tap {
+                from {transform: scale(1);}
+                to {transform: scale(1.3);}
+            }
+            
+            
+        </style>
+    </head>
+    <body>
+        <canvas></canvas>
+        <disabledJS>
+            <h1 style="text-align:center; width:100vw"> Browser Support Error </h1>
+            <ul>
+                <li> You're using Internet Explorer </li>
+                <li> You're using Safari version 10.3 or lower </li>
+                <li> Your browser doesn't support JavaScript </li>
+                <li> Your browser JavaScript option is disabled </li>
+            </ul>
+        </disabledJS>
+        <div class="middle">
+            <div class="controls">
+                <button id="w"> West </button>
+                <button id="e"> East </button>
+                <button id="d"> Down </button>
+                <button id="u"> Up </button>
+                <button id="r"> &#x21bb; </button>
+                <button id="s"> South </button>
+                <button id="n"> North </button>
+            </div>
+            <p> Click to Load </p>
+            <progress style="display:none" min="0" value="0" max="100"></progress>
+        </div>
+        <audio src="https://www.dl.dropboxusercontent.com/s/nerd1yciuc3evar/Blackhawk.mp3" />
+<script type="module">
+            
+            
+            import * as $3D from "https://threejsfundamentals.org/threejs/resources/threejs/r127/build/three.module.js";
+            import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/examples/jsm/controls/OrbitControls.js';
+            import {GLTFLoader} from 'https://threejsfundamentals.org/threejs/resources/threejs/r132/examples/jsm/loaders/GLTFLoader.js';
+            import {GUI} from "https://threejsfundamentals.org/threejs/resources/threejs/r127/examples/jsm/libs/dat.gui.module.js";
+            
+            window.onload = () => {
+                let canvas = document.querySelector('canvas');
+                let progressBar = document.querySelector("progress");
+                let tap = document.querySelector("p");
+                let sound = document.querySelector("audio");
+                let noJS = document.querySelector("disabledJS");
+                let controlBar = document.querySelector(".controls");
+                let control = document.querySelectorAll("button");
+                let center = document.querySelector(".middle");
+                let h = document.documentElement.clientHeight;
+                let w = document.documentElement.clientWidth;
+                let lampColNum = 0;
+                
+                setInterval(() => {
+                    setTimeout(() => {
+                    let w = document.documentElement.clientWidth;
+                    let h = document.documentElement.clientHeight;
+                        document.body.style.width = w + "px";
+                        document.body.style.height = h + "px";
+                        canvas.style.width = w + 'px';
+                        canvas.style.height = h + 'px';
+                        controlBar.style.width = w + "px";
+                        controlBar.style.height = h + "px";                        
+                    }, 100);
+                }, 10);
+                noJS.remove();
+                
+                const netChecker = setInterval(() => {
+                    if(!navigator.onLine) {
+                        document.body.remove();
+                        alert('Connection lost');
+                        console.error("Connection lost!\nWithout internet connection you won't be able to view this project. You will be able to turn off your internet after it has loaded!");
+                        clearInterval(netChecker);
+                    }
+                }, 100);
+                
+                tap.onclick = () => {
+                    tap.remove();
+                    progressBar.style.display = "block";
+                    center.style.pointerEvents = "none";
+                    for(let controls of control) {
+                        controls.style.pointerEvents = "all";
+                    }
+                    
+                    let af = null;
+                    let quality = null;
+                    let soft = null;
+                    
+                    const options = {
+                        very_low: true,
+                        low: false,
+                        medium: false,
+                        high: false,
+                        very_high: false,
+                    };
+                    
+                    function setChecked(prop) {
+                        for(let opt in options) {
+                            options[opt] = false;
+                        }
+                        
+                        options[0] = false;
+                        options[prop] = true;
+                    }
+                    
+                    setInterval(() => {
+                        if(options.low) {
+                            af = 10;
+                            quality = 1;
+                            soft = false;
+}
+                        else if(options.medium) {
+                            af = 20;
+                            quality = 2;
+                            soft = true;
+                        }
+                        else if(options.high) {
+                            af = 50;
+                            quality = 4;
+                            soft = true;
+                        }
+                        else if(options.very_high) {
+                            af = 100;
+                            quality = 8;
+                            soft = true;
+                        }
+                        else {
+                            af = 0;
+                            quality = .5;
+                            soft = false;
+                        }
+                    }, 10);
+                    
+                    const scene = new $3D.Scene();
+                    const cam = new $3D.PerspectiveCamera(50, w/h, .1, 1000);
+                    cam.position.z = 10;
+                    const controls = new OrbitControls(cam, canvas);
+                    controls.enablePan = false;
+                    controls.rotateSpeed = 2;
+                    controls.maxDistance = 20;
+                    controls.minDistance = 2;
+                    controls.zoomSpeed = 2;
+                    const mat = new $3D.MeshBasicMaterial({color:0xff0000});
+                    const light = new $3D.SpotLight();
+                    light.power = 3;
+                    light.position.y = 20;
+                    light.castShadow = true;
+                    light.shadow.mapSize.width = light.shadow.mapSize.height = 6000;
+                    scene.add(light);
+                    const gui = new GUI();
+                    let fol = gui.addFolder("Graphics");
+                    fol.add(options, 'very_low').name("Very Low").listen().onChange(() => setChecked('very_low'));
+                    fol.add(options, 'low').name("Low").listen().onChange(() => setChecked('low'));
+                    fol.add(options, "medium").name("Medium").listen().onChange(() => setChecked('medium'));
+                    fol.add(options, 'high').name('High').listen().onChange(() => setChecked('high'));
+                    fol.add(options, 'very_high').name("Very High").listen().onChange(() => setChecked('very_high'));
+                    fol.open();
+                    const piviot1 = new $3D.Group();
+                    const piviot2 = new  $3D.Group();
+                    const box1 = new $3D.Box3();
+                    const box2 = new $3D.Box3();
+                    const box3 = new $3D.Box3();
+                    const box4 = new $3D.Box3();
+                    
+                    new $3D.TextureLoader().load("https://www.dl.dropboxusercontent.com/s/fd1nlunwx0nnya8/mountains-above-the-clouds-aerial-survey-hdri-panorama-01.jpg", t => {
+                        setInterval(() => t.anisotropy = af, 10);
+                        t.mapping = $3D.EquirectangularReflectionMapping;
+                        scene.background = t;
+                    });
+                    const renderer = new $3D.WebGLRenderer({canvas});
+                    renderer.shadowMap.enabled = true;
+                    
+                    setInterval(() => {
+                        if(soft) {
+                            renderer.softShadowMap = true;
+                            renderer.shadowMap.type = $3D.PCFSoftShadowMap;
+                        renderer.antialias = true;
+                        }
+                    }, 10);
+                    
+                    new GLTFLoader().load("https://www.dl.dropboxusercontent.com/s/tc3a0eih33pzjuy/Blackhawk.glb", g => {
+                        let blackhawk = g.scene;
+                        blackhawk.scale.set(.05, .05, .05);
+                        scene.add(blackhawk);
+
+let rotorHead = blackhawk.getObjectByName("rotorhead");
+                        let rotor1 = blackhawk.getObjectByName("rotor1");
+                        let rotor2 = blackhawk.getObjectByName("rotor2");
+                        let rotor3 = blackhawk.getObjectByName("rotor3");
+                        let rotor4 = blackhawk.getObjectByName("rotor4");
+                        let tailRotorHead = blackhawk.getObjectByName("tailrotorhead");
+                        let tailRotor1 = blackhawk.getObjectByName("tailrotor1");
+                        let tailRotor2 = blackhawk.getObjectByName("tailrotor2");
+                        let tailRotor3 = blackhawk.getObjectByName("tailrotor3");
+                        let tailRotor4 = blackhawk.getObjectByName("tailrotor4");
+                        let lamp1 = blackhawk.getObjectByName("lamp1");
+                        let lamp2 = blackhawk.getObjectByName("lamp2");
+                        let pos = blackhawk.position;
+                        let rot = blackhawk.rotation;
+                        let moveWest;
+                        let moveEast;
+                        let moveDown;
+                        let moveUp;
+                        let moveSouth;
+                        let moveNorth;
+                        let counterclockwise;
+                        let clockwise;
+                        let reduceVol;
+                        
+                        const rotors = [
+                            rotor1,
+                            rotor2,
+                            rotor3,
+                            rotor4,
+                            tailRotor1,
+                            tailRotor2,
+                            tailRotor3,
+                            tailRotor4,
+                        ];
+                        
+                        const rotorHeads = [
+                            rotorHead,
+                            tailRotorHead,
+                        ];
+                        
+                        rotorHead.add(rotor1, rotor2, rotor3, rotor4);
+                        tailRotorHead.add(tailRotor1, tailRotor2, tailRotor3, tailRotor4);
+                        blackhawk.add(piviot1, piviot2);
+                        box1.setFromObject(rotorHead);
+                        box2.setFromObject(tailRotorHead);
+                        box3.setFromObject(rotor1, rotor2, rotor3, rotor4);
+                        box4.setFromObject(tailRotor1, tailRotor2, tailRotor3, tailRotor4);
+                        piviot1.add(rotorHead);
+                        piviot2.add(tailRotorHead);
+                        piviot1.position.set(.5, 33, 29);
+                        piviot2.position.set(-4, 34.3, -68);
+                        box1.getCenter(rotorHead.position);
+                        box2.getCenter(tailRotorHead.position);
+                        box3.getCenter(rotor1.position, rotor2.position, rotor3.position, rotor4.position);
+                        box4.getCenter(tailRotor1.position, tailRotor2.posotion, tailRotor3.position, tailRotor4.position);
+                        
+                        for(let rh in rotorHeads) {
+                            rotorHeads[rh].position.multiplyScalar(-1);
+                        }
+                        
+                        for(let r in rotors) {
+                            rotors[r].position.multiplyScalar(0);
+                        }
+                        
+                        setInterval(() => lampColNum % 2 == 0 ? mat.color.set(0xff0000) : mat.color.set(0x440000), 500);
+                        
+                        lamp1.material = lamp2.material = mat;
+                        
+                        const updateLamp = () => {
+                            setTimeout(() => lampColNum++, 500);
+                            setTimeout(() => lampColNum++, 1500);
+
+};
+                        updateLamp();
+                        setInterval(updateLamp, 1500);
+                        
+                        blackhawk.traverse(node => {
+                            if(node.castShadow !== undefined) {
+                                node.castShadow = node.receiveShadow = true;
+                            }
+                        });
+                        
+                        const west = () => {
+                            moveWest = setInterval(() => pos.x -= .02,1);
+                            counterclockwise = setInterval(() => {
+                                rot.z += .003;
+                                
+                                if(rot.z >= .2) {
+                                    clearInterval(counterclockwise);
+                                }
+                            },1);
+                        };
+                        
+                        const east = () => {
+                            moveEast = setInterval(() => pos.x += .02,1);
+                            
+                            clockwise = setInterval(() => {
+                                rot.z -= .003;
+                                
+                                if(rot.z <= -.2) {
+                                    clearInterval(clockwise);
+                                }
+                            },1);
+                        };
+                        
+                        const south = () => {
+                            moveSouth = setInterval(() => pos.z += .04,1);
+                        };
+                        
+                        const north = () => {
+                            moveNorth = setInterval(() => pos.z -= .04,1);
+                        };
+                        
+                        const down = () => {
+                            moveDown = setInterval(() => pos.y -= .015,1);
+                        };
+                        
+                        const up = () => {
+                            moveUp = setInterval(() => pos.y += .015,1);
+                        };
+                        
+                        const reset = () => pos.set(0,0,0);
+                        
+                        const returnBackFromCounterclockwise = () => {
+                            let returnBack = setInterval(() => {
+                                rot.z -= .003;
+                                
+                                if(rot.z <= 0) {
+                                        clearInterval(returnBack);
+                                    rot.z = 0;
+                                }
+                            },1);
+                        };
+                        
+                        const returnBackFromClockwise = () => {
+                            let returnBack = setInterval(() => {
+                                rot.z += .003;
+                                
+                                if(rot.z >= .05) {
+                                    clearInterval(returnBack);
+                                    rot.z = 0;
+                                }
+                            },1);
+                        };
+                        
+                            control[0].ontouchstart = () => west();
+                            control[1].ontouchstart = () => east();
+                            control[2].ontouchstart = () => down();
+                            control[3].ontouchstart = () => up();
+                            control[5].ontouchstart = () => south();
+                            control[6].ontouchstart = () => north();
+                            control[4].onclick = () => reset();
+                            
+                        for(let controls of control) {
+                            controls.ontouchend = () => {
+
+clearInterval(moveDown);
+                                clearInterval(moveUp);
+                                clearInterval(moveSouth);
+                                clearInterval(moveNorth);
+                            };
+                        }
+                        
+                        control[0].ontouchend = () => {
+                            returnBackFromCounterclockwise();
+                            clearInterval(moveWest);
+                            clearInterval(counterclockwise);
+                        };
+                        
+                        control[1].ontouchend = () => {
+                            returnBackFromClockwise();
+                            clearInterval(moveEast);
+                            clearInterval(clockwise);
+                        };
+                        
+                        window.onkeydown = e => {
+                            if(e.which == 37) {
+                                west();
+                            }
+                            else if(e.which == 39) {
+                                east();
+                            }
+                            else if(e.which == 40) {
+                                down();
+                            }
+                            else if(e.which == 38) {
+                                up();
+                            }
+                            else if(e.which == 83) {
+                                south();
+                            }
+                            else if(e.which == 78) {
+                                north();
+                            }
+                            else if(e.which == 13) {
+                                reset();
+                            }
+                        };
+                        window.onkeyup = () => {
+                            clearInterval(moveWest);
+                            clearInterval(moveEast);
+                            clearInterval(moveDown);
+                            clearInterval(moveUp);
+                            clearInterval(moveSouth);
+                            clearInterval(moveNorth);
+                            returnBackFromCounterclockwise();
+                            returnBackFromClockwise();
+                        };
+                        
+                        const render = () => {
+                            piviot1.rotation.y += .2;
+                            piviot2.rotation.x += 1.2;
+                            requestAnimationFrame(render);
+                        };
+                        render();
+                        
+                        sound.play();
+                        
+                        const loadingUpdate = setInterval(() => {
+                            if(progressBar.value >= 100) {
+                            controlBar.style.display = "block";
+                                progressBar.style.opacity = 0;
+                                canvas.style.display = "block";
+                                setTimeout(() => canvas.style.opacity = 1, 10);
+                                
+                                setInterval(() => {
+                                    if(sound.currentTime >= 10) {
+                                        sound.currentTime = 0;
+                                    }
+                                }, 10);
+                                clearInterval(loadingUpdate);
+                                clearInterval(netChecker);
+                            }
+                            else {
+                                progressBar.value++;
+                            }
+                        }, 10);
+                    });
+                    
+                    const render = () => {
+                        renderer.setSize(w * quality | 0, h * quality | 0, false);
+
+cam.aspect = w/h
+                        cam.updateProjectionMatrix();
+                        renderer.render(scene, cam);
+                        requestAnimationFrame(render);
+                    };
+                    requestAnimationFrame(render);
+                };
+            };
+            
+            
+        </script>
+    </body>
+</html>
