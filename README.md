@@ -38,19 +38,19 @@ You can also use this helper to select the best quality:
 You can even change the position of the Blackhawk, with the controller bar!
 If you're using laptop or PC, don't worry; you won't need to use the controller:
 <br/>
-Press arrow left to move west
+Press ***arrow left*** to move west
 <br/>
-Press arrow right in order to move east
+Press ***arrow right*** in order to move east
 <br/>
-Press arrow up to move up
+Press ***arrow up*** to move up
 <br/>
-Press arrow down to move down
+Press ***arrow down*** to move down
 <br/>
-Press N to move north
+Press ***N*** to move north
 <br />
-Press S to move south
+Press ***S*** to move south
 <br/>
-And finally press enter to reset
+And finally press ***enter*** to reset
 
 The main rotors round 360 rpm(rounds per minute), and the tail rotors round 4320 rpm! But if you select higher quality, it would be reduced (obviously because your RAM storage fulls).
 
