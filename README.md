@@ -52,7 +52,7 @@ Press ***S*** to move south
 <br/>
 And finally press ***enter*** to reset
 
-The main rotors round 360 rpm(rounds per minute), and the tail rotors round 4320 rpm! But if you select higher quality, it would be reduced (obviously because your RAM storage fulls).
+The main rotors round 360 rpm(rounds per minute), and the tail rotors round 4320 rpm! But if you select higher quality, it would be reduced (obviously because of running out of RAM).
 
 
 **What's New!**
