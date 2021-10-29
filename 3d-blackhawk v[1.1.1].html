@@ -271,7 +271,7 @@
                     const box3 = new $3D.Box3();
                     const box4 = new $3D.Box3();
                     
-                    new $3D.TextureLoader().load("https://www.dl.dropboxusercontent.com/s/fd1nlunwx0nnya8/mountains-above-the-clouds-aerial-survey-hdri-panorama-01.jpg", t => {
+                    new $3D.TextureLoader().load("mountains-above-the-clouds.jpg", t => {
                         setInterval(() => t.anisotropy = af, 10);
                         t.mapping = $3D.EquirectangularReflectionMapping;
                         scene.background = t;
